@@ -369,7 +369,7 @@ for i = 1:numSamples
     catch ME
         disp(['Error: ', ME.message]);
     end      
-           
+            
     %% Create a figure in pptx
     % Display all binarized slices
     figure;
@@ -420,9 +420,80 @@ for i = 1:numSamples
     img = mlreportgen.ppt.Picture(imgFile);
     replace(contentPlaceholder, img);
 
+    % Add Name + Concave volume ratio
+    % Define the path to the CSV file
+    csvFilePath = 'D:\PhD_Catia Domingos\3. Programs\Matlab\2. Analysis\2. ExM analysis\Analysis Convex Hull\ConvexHull_Results_Raw.csv';
+    % Check if the file exists
+    if exist(csvFilePath, 'file') ~= 2
+        error('The ConvexHull_Results_Raw.csv file does not exist.');
+    end
+    % Read the data from the CSV file into a table
+    convexHullData = readtable(csvFilePath);
+    % Read the last row of the CSV file
+    lastRow = convexHullData(end, :);
+    % Extract text from columns 1 and 10
+    column1Text = lastRow{1, 1};     % Assuming column 1 is of text data
+    column10Text = lastRow{1, 10};   % Assuming column 10 is of numeric type
+    % Convert column1Text to string if it's a cell
+    if iscell(column1Text)
+        column1Text = column1Text{1};
+    end
+    % Prepare the text content
+    textboxText = sprintf('%s Concave Volume Ratio: %.6f', column1Text, column10Text);
+    % Display the text content for debugging
+    disp(textboxText)
+    % Import the required package
+    import mlreportgen.ppt.*
+    % Open an existing PowerPoint presentation
+    ppt = Presentation('ConvexHull_Analysis.pptx');
+    % Add a slide to the presentation (you can choose a layout with a text placeholder)
+    slide = add(ppt, 'Title and Content');  % or use another layout that fits your needs
+    % Access the text placeholder on the slide
+    textBoxPlaceholder = find(slide, 'Content Placeholder');
+    % Check if a placeholder was found
+    if isempty(textBoxPlaceholder)
+        error('No text placeholder found on the slide.');
+    end
+    % Set the text content of the placeholder
+    textBoxPlaceholder.Text = textboxText;
+    
+
+
+%     % Add Name + Concave volume ratio
+%     % Define the path to the CSV file
+%     csvFilePath = 'D:\PhD_Catia Domingos\3. Programs\Matlab\2. Analysis\2. ExM analysis\Analysis Convex Hull\ConvexHull_Results_Raw.csv';
+%     % Check if the file exists
+%     if exist(csvFilePath, 'file') ~= 2
+%         error('The ConvexHull_Results_Raw.csv file does not exist.');
+%     end
+%     % Read the data from the CSV file into a table
+%     convexHullData = readtable(csvFilePath);
+%     % Read the last row of the CSV file
+%     lastRow = convexHullData(end, :);
+%     % Extract text from columns 1 and 10
+%     column1Text = lastRow{1, 1};     % Assuming column 1 is of text data
+%     column10Text = lastRow{1, 10};   % Assuming column 10 is of numeric type
+%     % Convert column1Text to string if it's a cell
+%     if iscell(column1Text)
+%         column1Text = column1Text{1};
+%     end
+%     % Prepare the text content
+%     textboxText = sprintf('%s Concave Volume Ratio: %.6f', column1Text, column10Text);
+%     % Display the text content for debugging
+%     disp(textboxText)
+%     % Create a TextBox object
+%     import mlreportgen.ppt.*
+%     textBox = TextBox(textboxText);
+%     % Set the position and size of the TextBox using the layout
+%     textBox.Position = [1 1 4 1];  % [left bottom width height] in inches
+%     % Ensure you have a slide object, for example, slide = ppt.Slides.Item(1);
+%     % Add the TextBox to the slide
+%     add(slide, textBox);
+
+
 end
 
-%% Save final results as Excel file
+%% Save Convex Hull measurements as Excel file
 
 %% Convert CSV to Excel
 % Define the CSV file path
