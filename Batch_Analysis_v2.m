@@ -33,7 +33,7 @@ macroScript = 'D:\PhD_Catia Domingos\3. Programs\Fiji.app\macros\3D ConvexHull.i
 %% Batch Analysis
 
 % Ask user to select the folder containing the images
-imageFolder = uigetdir('D:\PhD_Catia Domingos\4. Experiments\7.  Expansion Microscopy + IHC (i)\2. Experiments (i)\1. ExM tripartite synapse final (i)\20240529 Analysis Convex Hull\1. Analysis', 'Select the folder containing the images to analyze');
+imageFolder = uigetdir('D:\PhD_Catia Domingos\4. Experiments\7.  ExM + IHC (i)\2. Experiments (i)\1. ExM tripartite synapse final (i)\20240529 Analysis Convex Hull\1. Analysis', 'Select the folder containing the images to analyze');
 
 %imageFolder = uigetdir('D:\', 'Select the folder containing the images to analyze');
 if imageFolder == 0
@@ -97,8 +97,11 @@ resolutionPPCM = micronsPerCm / xyResolutionMicrons;
 % Construct the PowerPoint file name
 pptFileName = ['ConvexHull_Analysis_', folderName, '.pptx'];
 
+% Combine the folder path with the PowerPoint file name
+pptFilePath = fullfile(imageFolder, pptFileName);
+
 % Create the PowerPoint presentation with the constructed file name
-ppt = mlreportgen.ppt.Presentation(pptFileName);
+ppt = mlreportgen.ppt.Presentation(pptFilePath);
 open(ppt);
 
 %% Loop through each sample, process images and generate plots
@@ -155,6 +158,9 @@ for i = 1:numSamples
     % File name: Concatenate the prefix with the original filename
     prefix = 'Ch2_Shank2_';  
     newFileName = [prefix, fileTifList{i}];
+    
+    % Combine the image folder path with the new file name
+    newFileName = fullfile(imageFolder, newFileName);
     
     % Open the Tiff object
     try
@@ -219,8 +225,11 @@ for i = 1:numSamples
     
     % Create a new filename for the binarized image
     % Concatenate the prefix with the original filename
-    outputFilename = ['Binarized_', newFileName];
+    binarizedFileName = ['Binarized_Ch2_Shank2_', fileTifList{i}];
     
+    % Combine the image folder path with the new file name
+    outputFilename = fullfile(imageFolder, binarizedFileName);
+
     % Loop over each slice
     for k = 1:numSlices
         % Read the k-th slice
@@ -519,24 +528,28 @@ close(ppt);
 %% Convert CSV to Excel
 
 % Define the Excel file path based on the selected image folder
-rawExcelFilePath = fullfile(imageFolder, 'ConvexHull_Results_Processed.xlsx');
+excelFilePath = fullfile(imageFolder, 'ConvexHull_Results_Processed.xlsx');
 
 % Read the CSV file into a table
 dataTable = readtable(rawResultsFilePath);
 % Write the table to an Excel file
-writetable(dataTable, rawExcelFilePath);
+writetable(dataTable, excelFilePath);
+
+% Verify the Excel file was created
+if ~isfile(excelFilePath)
+    error('Failed to create the Excel file: %s', excelFilePath);
+end
 
 %% Process and format data
 %% Correct headers for rawResults
 % Load data from the Excel file
-filename = 'ConvexHull_Results_Processed.xlsx'; 
-dataTable = readtable(filename);
+dataTable = readtable(rawResultsFilePath);
 
 % Modify column name
 dataTable.Properties.VariableNames{'Var1'} = 'Sample';
 
 % Save the modified table 
-writetable(dataTable, filename);
+writetable(dataTable, rawResultsFilePath);
 
 %% Auto-fit columns and align text in Excel
 % Start Excel
@@ -544,7 +557,7 @@ excel = actxserver('Excel.Application');
 excel.Visible = true;  % Set to true for debugging, false for silent operation
 
 % Open the workbook
-workbook = excel.Workbooks.Open(fullfile(pwd, filename));
+workbook = excel.Workbooks.Open(excelFilePath);
 
 % Access the first sheet
 sheet = workbook.Sheets.Item(1);
